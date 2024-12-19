@@ -136,3 +136,15 @@ coverage/
 /blob-report/
 /playwright/.cache/
 .DS_Store
+
+.idea/
+.vscode/
+package-lock.json
+yarn.lock
+yarn-error.log
+npm-debug.log
+npm-debug.log.*
+pnpm-debug.log
+pnpm-debug.log.*
+
+# End of .gitignore
