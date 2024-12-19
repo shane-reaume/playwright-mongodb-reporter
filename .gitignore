@@ -139,7 +139,6 @@ coverage/
 
 .idea/
 .vscode/
-yarn.lock
 yarn-error.log
 npm-debug.log
 npm-debug.log.*
