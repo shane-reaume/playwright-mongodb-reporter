@@ -1,8 +1,8 @@
 # playwright-mongodb-reporter
 
-[![npm version](https://badge.fury.io/js/playwright-mongodb-reporter.svg)](https://badge.fury.io/js/playwright-mongodb-reporter)
-[![Tests](https://github.com/yourusername/playwright-mongodb-reporter/workflows/Tests/badge.svg)](https://github.com/shane-reaume/playwright-mongodb-reporter/actions)
-[![codecov](https://codecov.io/gh/yourusername/playwright-mongodb-reporter/branch/main/graph/badge.svg)](https://codecov.io/gh/shane-reaume/playwright-mongodb-reporter)
+[![Tests](https://github.com/shane-reaume/playwright-mongodb-reporter/actions/workflows/test.yml/badge.svg)](https://github.com/shane-reaume/playwright-mongodb-reporter/actions/workflows/test.yml)
+[![NPM Version](https://img.shields.io/npm/v/playwright-mongodb-reporter.svg)](https://www.npmjs.com/package/playwright-mongodb-reporter)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A MongoDB reporter for Playwright tests that saves your test results directly to MongoDB.
 
