@@ -1,0 +1,68 @@
+{
+  "name": "playwright-mongodb-reporter",
+  "version": "1.0.0",
+  "description": "A MongoDB reporter for Playwright tests",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "postinstall": "npm run setup",
+    "setup": "playwright install chromium",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run lint && npm run build && npm run test",
+    "dev": "npm run build:watch",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "check": "npm run lint && npm run format",
+    "validate": "npm run check && npm run test",
+    "test": "playwright test",
+    "test:watch": "playwright test --watch",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "test:coverage": "playwright test --reporter=html"
+  },
+  "keywords": [
+    "playwright",
+    "testing",
+    "reporter",
+    "mongodb",
+    "test-reporter"
+  ],
+  "author": "Shane Reaume",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shane-reaume/playwright-mongodb-reporter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shane-reaume/playwright-mongodb-reporter/issues"
+  },
+  "homepage": "https://github.com/shane-reaume/playwright-mongodb-reporter#readme",
+  "dependencies": {
+    "mongodb": "^6.12.0"
+  },
+  "peerDependencies": {
+    "@playwright/test": "^1.49.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "@types/node": "^22.10.2",
+    "@typescript-eslint/eslint-plugin": "^8.18.1",
+    "@typescript-eslint/parser": "^8.18.1",
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}

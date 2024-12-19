@@ -1,0 +1,45 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]  # Removed 23.x and 24.x as they're not LTS
+      fail-fast: false  # Continue with other versions if one fails
+
+    steps:
+    - uses: actions/checkout@v4  # Updated to v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4  # Updated to v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'  # Added caching
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps chromium
+
+    - name: Run lint
+      run: npm run lint
+
+    - name: Run build
+      run: npm run build
+
+    - name: Run tests
+      run: npm test
+
+    - name: Upload coverage
+      uses: codecov/codecov-action@v4  # Updated to v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}  # Added token
