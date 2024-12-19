@@ -21,7 +21,7 @@
     "test:watch": "playwright test --watch",
     "test:debug": "playwright test --debug",
     "test:ui": "playwright test --ui",
-    "test:coverage": "playwright test --reporter=html"
+    "test:coverage": "c8 -r lcov -r text playwright test"
   },
   "keywords": [
     "playwright",
@@ -51,6 +51,7 @@
     "@types/node": "^22.10.2",
     "@typescript-eslint/eslint-plugin": "^8.18.1",
     "@typescript-eslint/parser": "^8.18.1",
+    "c8": "^10.1.3",
     "eslint": "^9.17.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",

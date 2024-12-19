@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   test:
@@ -30,16 +30,13 @@ jobs:
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps chromium
 
-    - name: Run lint
-      run: npm run lint
+    - name: Run tests with coverage
+      run: npm run test:coverage
 
-    - name: Run build
-      run: npm run build
-
-    - name: Run tests
-      run: npm test
-
-    - name: Upload coverage
-      uses: codecov/codecov-action@v4  # Updated to v4
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v5
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}  # Added token
+        files: ./coverage/lcov.info
+        fail_ci_if_error: true
+        token: ${{ secrets.CODECOV_TOKEN }}
+        slug: shane-reaume/playwright-mongodb-reporter
