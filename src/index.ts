@@ -94,7 +94,7 @@ class MongoReporter implements Reporter {
   private async writeToMongo(test: TestCase, result: TestResult, retryCount = 0) {
     if (this.currentGroupName) {
       try {
-        const [suite_title, suite_sub] = this.currentGroupName.split(' -|- ');
+        const [suite_title, suite_title_sub] = this.currentGroupName.split(' -|- ');
         const [test_case, test_case_sub] = this.currentTestName.split(' -|- ');
 
         const doc = {
@@ -104,7 +104,7 @@ class MongoReporter implements Reporter {
           duration: result.duration,
           timestamp: new Date(),
           suite_title,
-          suite_sub,
+          suite_title_sub,
           retry: test.retries,
           error: result.error?.message,
         };
@@ -113,7 +113,7 @@ class MongoReporter implements Reporter {
           await this.collection.updateOne(
             {
               suite_title: doc.suite_title,
-              suite_sub: doc.suite_sub,
+              suite_title_sub: doc.suite_title_sub,
               test_case: doc.test_case,
               test_case_sub: doc.test_case_sub,
             },

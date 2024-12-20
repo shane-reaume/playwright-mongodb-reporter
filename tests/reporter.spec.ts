@@ -156,7 +156,7 @@ test.describe('MongoReporter', () => {
     expect(updateOneCalls.length).toBe(1);
     expect(updateOneCalls[0].filter).toMatchObject({
       suite_title: 'Chrome',
-      suite_sub: 'Group 1',
+      suite_title_sub: 'Group 1',
       test_case: 'Store A',
       test_case_sub: 'Blah Subtitle',
     });
