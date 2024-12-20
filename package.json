@@ -1,6 +1,6 @@
 {
   "name": "playwright-mongodb-reporter",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "A MongoDB reporter for Playwright tests",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
