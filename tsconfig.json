@@ -14,6 +14,6 @@
     "resolveJsonModule": true,
     "lib": ["ES2022"]  // Added
   },
-  "include": ["src/**/*", "tests/**/*", "playwright.config.ts"],
+  "include": ["src/*", "tests/*", "playwright.config.ts"],
   "exclude": ["node_modules", "dist", "playwright-report", "test-results"]
 }

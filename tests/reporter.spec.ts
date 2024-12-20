@@ -1,26 +1,32 @@
 import { test, expect } from '@playwright/test';
 import MongoReporter from '../src';
-import type { TestCase, TestResult, FullConfig, Suite, FullResult } from '@playwright/test/reporter';
+import type {
+  TestCase,
+  TestResult,
+  FullConfig,
+  Suite,
+  FullResult,
+} from '@playwright/test/reporter';
 import type { MongoClient } from 'mongodb';
 
 test.describe('MongoReporter', () => {
   let reporter: MongoReporter;
   let connectCalls = 0;
   let closeCalls = 0;
-  let updateOneCalls: Array<{ filter: any, update: any }> = [];
+  let updateOneCalls: Array<{ filter: any; update: any }> = [];
 
   const mockCollection = {
     updateOne: async (filter: any, update: any) => {
       updateOneCalls.push({ filter, update });
       return Promise.resolve({ acknowledged: true });
-    }
+    },
   };
 
   const mockDb = {
     collection: () => mockCollection,
     admin: () => ({
-      ping: async () => Promise.resolve()
-    })
+      ping: async () => Promise.resolve(),
+    }),
   };
 
   const mockClient = {
@@ -32,7 +38,7 @@ test.describe('MongoReporter', () => {
     close: async () => {
       closeCalls++;
       return Promise.resolve();
-    }
+    },
   };
 
   const mockClientFactory = () => mockClient as unknown as MongoClient;
@@ -57,7 +63,7 @@ test.describe('MongoReporter', () => {
     fullyParallel: false,
     globalSetup: null,
     globalTeardown: null,
-    globalTimeout: 0
+    globalTimeout: 0,
   };
 
   const mockSuite: Suite = {
@@ -69,7 +75,7 @@ test.describe('MongoReporter', () => {
     entries: () => [],
     titlePath: () => [],
     location: undefined,
-    type: 'describe'
+    type: 'describe',
   };
 
   test.beforeEach(async () => {
@@ -82,7 +88,7 @@ test.describe('MongoReporter', () => {
       mongoUri: 'mongodb://fake-uri',
       dbName: 'test-db',
       collectionName: 'test-collection',
-      _mongoClientFactory: mockClientFactory
+      _mongoClientFactory: mockClientFactory,
     });
   });
 
@@ -101,9 +107,9 @@ test.describe('MongoReporter', () => {
     await reporter.onBegin(mockConfig, mockSuite);
 
     const testCase: TestCase = {
-      title: 'Store A -|- Page B -|- https://example.com/path',
+      title: 'Store A -|- Blah Subtitle',
       parent: {
-        title: 'Chrome - Group 1',
+        title: 'Chrome -|- Group 1',
         allTests: () => [],
         project: () => undefined,
         suites: [],
@@ -111,7 +117,7 @@ test.describe('MongoReporter', () => {
         entries: () => [],
         titlePath: () => [],
         location: undefined,
-        type: 'describe'
+        type: 'describe',
       },
       expectedStatus: 'passed',
       timeout: 0,
@@ -125,7 +131,7 @@ test.describe('MongoReporter', () => {
       titlePath: () => [],
       repeatEachIndex: 0,
       tags: [],
-      type: 'test'
+      type: 'test',
     };
 
     const result: TestResult = {
@@ -145,14 +151,14 @@ test.describe('MongoReporter', () => {
 
     await reporter.onTestBegin(testCase);
     await reporter.onTestEnd(testCase, result);
+    console.log('Filter object:', updateOneCalls[0].filter);
 
     expect(updateOneCalls.length).toBe(1);
     expect(updateOneCalls[0].filter).toMatchObject({
-      browser_group: 'Chrome',
-      test_group: 'Group 1',
-      test_store: 'Store A',
-      test_page_name: 'Page B',
-      test_path: '/path'
+      suite_title: 'Chrome',
+      suite_sub: 'Group 1',
+      test_case: 'Store A',
+      test_case_sub: 'Blah Subtitle',
     });
   });
 
@@ -161,14 +167,14 @@ test.describe('MongoReporter', () => {
       ...mockClient,
       connect: async () => {
         throw new Error('Connection failed');
-      }
+      },
     };
 
     reporter = new MongoReporter({
       mongoUri: 'mongodb://fake-uri',
       dbName: 'test-db',
       collectionName: 'test-collection',
-      _mongoClientFactory: () => errorClient as unknown as MongoClient
+      _mongoClientFactory: () => errorClient as unknown as MongoClient,
     });
 
     await expect(reporter.onBegin(mockConfig, mockSuite)).rejects.toThrow('Connection failed');
@@ -180,7 +186,7 @@ test.describe('MongoReporter', () => {
     const fullResult: FullResult = {
       status: 'passed',
       startTime: new Date(),
-      duration: 1000
+      duration: 1000,
     };
 
     await reporter.onEnd(fullResult);
@@ -188,7 +194,6 @@ test.describe('MongoReporter', () => {
   });
 
   test('handles missing credentials correctly', async () => {
-    await expect(() => new MongoReporter({}))
-      .toThrow('MongoDB credentials not provided');
+    await expect(() => new MongoReporter({})).toThrow('MongoDB credentials not provided');
   });
 });

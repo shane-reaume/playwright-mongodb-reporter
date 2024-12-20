@@ -37,7 +37,8 @@ class MongoReporter implements Reporter {
     this.dbName = options.dbName || process.env.MONGODB_DB_NAME || 'testResults';
     this.collectionName =
       options.collectionName || process.env.MONGODB_COLLECTION || 'test_results';
-    this.mongoClientFactory = options._mongoClientFactory || ((uri: string) => new MongoClient(uri));
+    this.mongoClientFactory =
+      options._mongoClientFactory || ((uri: string) => new MongoClient(uri));
   }
 
   private buildMongoUri(options: MongoReporterOptions): string {
@@ -93,7 +94,7 @@ class MongoReporter implements Reporter {
   private async writeToMongo(test: TestCase, result: TestResult, retryCount = 0) {
     if (this.currentGroupName) {
       try {
-        const [test_group_title, test_group_sub] = this.currentGroupName.split(' -|- ');
+        const [suite_title, suite_sub] = this.currentGroupName.split(' -|- ');
         const [test_case, test_case_sub] = this.currentTestName.split(' -|- ');
 
         const doc = {
@@ -102,8 +103,8 @@ class MongoReporter implements Reporter {
           result: result.status,
           duration: result.duration,
           timestamp: new Date(),
-          test_group_title,
-          test_group_sub,
+          suite_title,
+          suite_sub,
           retry: test.retries,
           error: result.error?.message,
         };
@@ -111,8 +112,8 @@ class MongoReporter implements Reporter {
         if (await this.isConnected()) {
           await this.collection.updateOne(
             {
-              test_group_title: doc.test_group_title,
-              test_group_sub: doc.test_group_sub,
+              suite_title: doc.suite_title,
+              suite_sub: doc.suite_sub,
               test_case: doc.test_case,
               test_case_sub: doc.test_case_sub,
             },
