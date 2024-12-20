@@ -93,34 +93,28 @@ class MongoReporter implements Reporter {
   private async writeToMongo(test: TestCase, result: TestResult, retryCount = 0) {
     if (this.currentGroupName) {
       try {
-        const [browser_group, test_group] = this.currentGroupName.split(' - ');
-        const [test_store, test_page_name, path] = this.currentTestName.split(' -|- ');
-
-        const url = new URL(path);
-        const test_path = url.pathname;
+        const [test_group_title, test_group_sub] = this.currentGroupName.split(' -|- ');
+        const [test_case, test_case_sub] = this.currentTestName.split(' -|- ');
 
         const doc = {
-          test_store,
-          test_page_name,
-          test_path,
+          test_case,
+          test_case_sub,
           result: result.status,
           duration: result.duration,
           timestamp: new Date(),
-          browser_group,
-          test_group,
+          test_group_title,
+          test_group_sub,
           retry: test.retries,
           error: result.error?.message,
-          stack: result.error?.stack,
         };
 
         if (await this.isConnected()) {
           await this.collection.updateOne(
             {
-              browser_group: doc.browser_group,
-              test_group: doc.test_group,
-              test_store: doc.test_store,
-              test_page_name: doc.test_page_name,
-              test_path: doc.test_path,
+              test_group_title: doc.test_group_title,
+              test_group_sub: doc.test_group_sub,
+              test_case: doc.test_case,
+              test_case_sub: doc.test_case_sub,
             },
             { $set: doc },
             { upsert: true }
