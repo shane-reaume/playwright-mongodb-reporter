@@ -130,6 +130,7 @@ dist
 .pnp.*
 
 dist/
+!dist/index.js
 coverage/
 /test-results/
 /playwright-report/
