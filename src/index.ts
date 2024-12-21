@@ -67,15 +67,25 @@ class MongoReporter implements Reporter {
   }
 
   async onBegin(config: FullConfig, suite: Suite) {
-    try {
-      this.client = this.mongoClientFactory(this.mongoUri);
-      await this.client.connect();
-      this.collection = this.client.db(this.dbName).collection(this.collectionName);
+    let attempts = 0;
+    const maxAttempts = 3;
 
-      console.log(`Starting the run with ${suite.allTests().length} tests`);
-    } catch (error) {
-      console.error('Failed to connect to MongoDB:', error);
-      throw error;
+    while (attempts < maxAttempts) {
+      try {
+        this.client = this.mongoClientFactory(this.mongoUri);
+        await this.client.connect();
+        this.collection = this.client.db(this.dbName).collection(this.collectionName);
+        console.log(`Starting the run with ${suite.allTests().length} tests`);
+        return;
+      } catch (error) {
+        attempts++;
+        if (attempts === maxAttempts) {
+          console.error('Failed to connect to MongoDB:', error);
+          throw error;
+        }
+        // Wait before retrying (exponential backoff)
+        await new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempts) * 100));
+      }
     }
   }
 

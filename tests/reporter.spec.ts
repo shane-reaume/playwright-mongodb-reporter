@@ -9,6 +9,15 @@ import type {
 } from '@playwright/test/reporter';
 import type { MongoClient } from 'mongodb';
 
+// Define a TestError class
+class TestError extends Error {
+  cause?: TestError;
+  constructor(message: string, cause?: TestError) {
+    super(message);
+    this.cause = cause;
+  }
+}
+
 test.describe('MongoReporter', () => {
   let reporter: MongoReporter;
   let connectCalls = 0;
@@ -195,5 +204,259 @@ test.describe('MongoReporter', () => {
 
   test('handles missing credentials correctly', async () => {
     await expect(() => new MongoReporter({})).toThrow('MongoDB credentials not provided');
+  });
+
+  test('handles environment variables for MongoDB configuration', async () => {
+    process.env.MONGODB_URI = 'mongodb://env-uri';
+    process.env.MONGODB_DB_NAME = 'env-db';
+    process.env.MONGODB_COLLECTION = 'env-collection';
+
+    const envReporter = new MongoReporter();
+    expect(envReporter['mongoUri']).toBe('mongodb://env-uri');
+    expect(envReporter['dbName']).toBe('env-db');
+    expect(envReporter['collectionName']).toBe('env-collection');
+
+    // Clean up
+    delete process.env.MONGODB_URI;
+    delete process.env.MONGODB_DB_NAME;
+    delete process.env.MONGODB_COLLECTION;
+  });
+
+  test('handles environment variables for credentials', async () => {
+    process.env.MONGODB_USER = 'env-user';
+    process.env.MONGODB_PASSWORD = 'env-pass';
+    process.env.MONGODB_HOST = 'env-host';
+    process.env.MONGODB_PORT = '27018';
+    process.env.MONGODB_AUTH_SOURCE = 'env-auth';
+
+    const envReporter = new MongoReporter({});
+    expect(envReporter['mongoUri']).toBe(
+      'mongodb://env-user:env-pass@env-host:27018/?authSource=env-auth'
+    );
+
+    // Clean up
+    delete process.env.MONGODB_USER;
+    delete process.env.MONGODB_PASSWORD;
+    delete process.env.MONGODB_HOST;
+    delete process.env.MONGODB_PORT;
+    delete process.env.MONGODB_AUTH_SOURCE;
+  });
+
+  test('handles reconnection attempts on write failure', async () => {
+    let connectionAttempts = 0;
+    const reconnectClient = {
+      ...mockClient,
+      connect: async () => {
+        connectionAttempts++;
+        if (connectionAttempts === 1) {
+          throw new Error('Initial connection failed');
+        }
+        return Promise.resolve();
+      },
+      db: () => ({
+        ...mockDb,
+        admin: () => ({
+          ping: async () => {
+            throw new Error('Connection lost');
+          },
+        }),
+      }),
+    };
+
+    reporter = new MongoReporter({
+      mongoUri: 'mongodb://fake-uri',
+      _mongoClientFactory: () => reconnectClient as unknown as MongoClient,
+    });
+
+    await reporter.onBegin(mockConfig, mockSuite);
+
+    const testCase: TestCase = {
+      title: 'Test Case',
+      parent: {
+        title: 'Test Suite',
+        allTests: () => [],
+        project: () => undefined,
+        suites: [],
+        tests: [],
+        entries: () => [],
+        titlePath: () => [],
+        location: undefined,
+        type: 'describe',
+      },
+      expectedStatus: 'passed',
+      timeout: 0,
+      annotations: [],
+      retries: 0,
+      results: [],
+      location: { file: '', line: 0, column: 0 },
+      id: '',
+      outcome: () => 'expected' as const,
+      ok: () => true,
+      titlePath: () => [],
+      repeatEachIndex: 0,
+      tags: [],
+      type: 'test',
+    };
+
+    const result: TestResult = {
+      status: 'passed',
+      duration: 1000,
+      retry: 0,
+      startTime: new Date(),
+      attachments: [],
+      stdout: [],
+      stderr: [],
+      steps: [],
+      errors: [],
+      error: {
+        message: 'Test error message',
+        stack: 'stack trace',
+        value: 'Test error message',
+      },
+      parallelIndex: 0,
+      workerIndex: 0,
+    };
+
+    await reporter.onTestBegin(testCase);
+    await reporter.onTestEnd(testCase, result);
+    expect(connectionAttempts).toBeGreaterThan(1);
+  });
+
+  test('handles test results with error messages', async () => {
+    await reporter.onBegin(mockConfig, mockSuite);
+
+    const testCase: TestCase = {
+      title: 'Failed Test',
+      parent: {
+        title: 'Error Suite',
+        allTests: () => [],
+        project: () => undefined,
+        suites: [],
+        tests: [],
+        entries: () => [],
+        titlePath: () => [],
+        location: undefined,
+        type: 'describe',
+      },
+      expectedStatus: 'failed',
+      timeout: 0,
+      annotations: [],
+      retries: 2,
+      results: [],
+      location: { file: '', line: 0, column: 0 },
+      id: '',
+      outcome: () => 'unexpected' as const,
+      ok: () => false,
+      titlePath: () => [],
+      repeatEachIndex: 0,
+      tags: [],
+      type: 'test',
+    };
+
+    const result: TestResult = {
+      status: 'failed',
+      duration: 1000,
+      retry: 2,
+      startTime: new Date(),
+      attachments: [],
+      stdout: [],
+      stderr: [],
+      steps: [],
+      errors: [new TestError('First error'), new TestError('Second error')],
+      error: new TestError('Main error message'),
+      parallelIndex: 0,
+      workerIndex: 0,
+    };
+
+    await reporter.onTestBegin(testCase);
+    await reporter.onTestEnd(testCase, result);
+
+    expect(updateOneCalls.length).toBe(1);
+    expect(updateOneCalls[0].update.$set.error).toBe('Main error message');
+    expect(updateOneCalls[0].update.$set.retry).toBe(2);
+  });
+
+  test('handles connection close errors', async () => {
+    const errorOnCloseClient = {
+      ...mockClient,
+      close: async () => {
+        throw new Error('Failed to close connection');
+      },
+      db: () => ({
+        ...mockDb,
+        admin: () => ({
+          ping: async () => Promise.resolve(),
+        }),
+      }),
+    };
+
+    reporter = new MongoReporter({
+      mongoUri: 'mongodb://fake-uri',
+      _mongoClientFactory: () => errorOnCloseClient as unknown as MongoClient,
+    });
+
+    await reporter.onBegin(mockConfig, mockSuite);
+
+    const fullResult: FullResult = {
+      status: 'passed',
+      startTime: new Date(),
+      duration: 1000,
+    };
+
+    // This should not throw but should log the error
+    await reporter.onEnd(fullResult);
+  });
+
+  test('handles missing test group names', async () => {
+    await reporter.onBegin(mockConfig, mockSuite);
+
+    const testCase: TestCase = {
+      title: 'Simple Test',
+      parent: {
+        title: '', // Empty title
+        allTests: () => [],
+        project: () => undefined,
+        suites: [],
+        tests: [],
+        entries: () => [],
+        titlePath: () => [],
+        location: undefined,
+        type: 'describe',
+      },
+      expectedStatus: 'passed',
+      timeout: 0,
+      annotations: [],
+      retries: 0,
+      results: [],
+      location: { file: '', line: 0, column: 0 },
+      id: '',
+      outcome: () => 'expected' as const,
+      ok: () => true,
+      titlePath: () => [],
+      repeatEachIndex: 0,
+      tags: [],
+      type: 'test',
+    };
+
+    const result: TestResult = {
+      status: 'passed',
+      duration: 1000,
+      retry: 0,
+      startTime: new Date(),
+      attachments: [],
+      stdout: [],
+      stderr: [],
+      steps: [],
+      errors: [],
+      error: undefined,
+      parallelIndex: 0,
+      workerIndex: 0,
+    };
+
+    await reporter.onTestBegin(testCase);
+    await reporter.onTestEnd(testCase, result);
+
+    // Should not attempt to write to MongoDB when group name is empty
+    expect(updateOneCalls.length).toBe(0);
   });
 });
