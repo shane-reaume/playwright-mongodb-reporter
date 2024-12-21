@@ -79,8 +79,10 @@ module.exports = config;
 
 When the reporter encounters a `-|-` in your suite or test titles, it splits the title into two parts:
 
--   Main Title: The portion before `-|-
--   Subtitle: The portion after -|-
+-   Main Title: The portion before `-|-`
+-   Subtitle: The portion after `-|-`
+
+
 These are then stored separately in your MongoDB collection, allowing for better organization and querying of your test results.
 
 ### Example Usage
@@ -114,24 +116,24 @@ test.describe('Blog Tests -|- Guest User', () => {
 In the example above:
 
 - Suite Titles:
-  - Blog Tests -|- Admin User
+  - Blog Tests `-|-` Admin User
     - suite_title: Blog Tests
     - suite_title_sub: Admin User
-  - Blog Tests -|- Guest User
+  - Blog Tests `-|-` Guest User
     - suite_title: Blog Tests
     - suite_title_sub: Guest User
 
 - Test Case Titles:
-  - Create Post -|- With Valid Data
+  - Create Post `-|-` With Valid Data
     - test_case: Create Post
     - test_case_sub: With Valid Data
-  - Delete Post -|- Existing Post
-    - test_case: Delete Post 
+  - Delete Post `-|-` Existing Post
+    - test_case: Delete Post
     - test_case_sub: Existing Post
-  - View Post -|- Published Post
+  - View Post `-|-` Published Post
     - test_case: View Post
     - test_case_sub: Published Post
-  - Create Post -|- Should Fail
+  - Create Post `-|-` Should Fail
     - test_case: Create Post
     - test_case_sub: Should Fail
 
@@ -145,10 +147,10 @@ In the example above:
 
 Each test result is stored with the following fields:
 
--   suite_title: The main suite title before -|-
--   suite_title_sub: The suite subtitle after -|- (if present)
--   test_case: The main test case title before -|-
--   test_case_sub: The test case subtitle after -|- (if present)
+-   suite_title: The main suite title before `-|-`
+-   suite_title_sub: The suite subtitle after `-|-` (if present)
+-   test_case: The main test case title before `-|-`
+-   test_case_sub: The test case subtitle after `-|-` (if present)
 -   result: The test result status (passed, failed, etc.)
 -   duration: Execution time of the test
 -   timestamp: Date and time when the test was executed
@@ -158,13 +160,13 @@ Each test result is stored with the following fields:
 
 ### Usage Tips
 
--   Consistent Separator: Ensure you use -|- consistently in your titles to enable correct splitting.
--   Optional Subtitles: If you don't include -|- in a title, the entire title is considered the main title, and the subtitle fields will be null.
+-   Consistent Separator: Ensure you use `-|-` consistently in your titles to enable correct splitting.
+-   Optional Subtitles: If you don't include `-|-` in a title, the entire title is considered the main title, and the subtitle fields will be null.
 -   Dynamic Titles: You can programmatically append subtitles based on variables like user roles, environments, or other configurations within your test code.
 
 ### Sample Configuration
 
-Your playwright.config.ts does not need to include the -|-' separator in project names. Instead, focus on using `-|-` within your test code's suite and test titles.
+Your playwright.config.ts does not need to include the `-|-` separator in project names. Instead, focus on using `-|-` within your test code's suite and test titles.
 
 ```typescript
 // playwright.config.ts
@@ -222,9 +224,9 @@ With your data organized into main titles and subtitles, you can perform more pr
 
 ### Avoiding Duplicates
 
-By using the -|-' separator and structuring your titles accordingly, the reporter can identify when a test is logically the same but has unique aspects. This prevents duplication in your database and makes your test reporting cleaner.
+By using the `-|-` separator and structuring your titles accordingly, the reporter can identify when a test is logically the same but has unique aspects. This prevents duplication in your database and makes your test reporting cleaner.
 For example, if you run the same test across different user roles or data sets, using subtitles allows each test result to be stored as a unique entry.
 
 ### Conclusion
 
-Using the -|-' separator in your suite and test titles enhances the flexibility and organization of your test reporting. It allows you to maintain common titles for related tests while adding uniqueness where necessary, all without cluttering your database with duplicate entries.
+Using the `-|-` separator in your suite and test titles enhances the flexibility and organization of your test reporting. It allows you to maintain common titles for related tests while adding uniqueness where necessary, all without cluttering your database with duplicate entries.
